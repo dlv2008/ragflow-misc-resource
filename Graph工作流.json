@@ -1,0 +1,1325 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "data": {
+          "form": {
+            "inputs": {},
+            "mode": "conversational",
+            "outputs": {},
+            "prologue": "你好，我可以根据问题类型选择普通 RAG、GraphRAG 或 RAPTOR 进行回答。"
+          },
+          "label": "Begin",
+          "name": "begin"
+        },
+        "dragging": false,
+        "id": "begin",
+        "measured": {
+          "height": 81,
+          "width": 200
+        },
+        "position": {
+          "x": -740,
+          "y": 60
+        },
+        "selected": false,
+        "sourcePosition": "left",
+        "targetPosition": "right",
+        "type": "beginNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cite": true,
+            "delay_after_error": 1,
+            "description": "",
+            "exception_default_value": "",
+            "exception_goto": [],
+            "exception_method": "",
+            "frequencyPenaltyEnabled": true,
+            "frequency_penalty": 0.5,
+            "llm_id": "I2AI/minimax-m2.5___OpenAI-API@OpenAI-API-Compatible",
+            "maxTokensEnabled": false,
+            "max_retries": 3,
+            "max_rounds": 1,
+            "max_tokens": 4096,
+            "mcp": [],
+            "message_history_window_size": 12,
+            "outputs": {
+              "content": {
+                "type": "string",
+                "value": ""
+              },
+              "structured": {
+                "properties": {
+                  "category": {
+                    "description": "问题路由分类",
+                    "enum": [
+                      "plain_rag",
+                      "graph_rag",
+                      "raptor",
+                      "graph_raptor",
+                      "clarify"
+                    ],
+                    "type": "string"
+                  },
+                  "reason": {
+                    "description": "一句话说明分类原因",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "category",
+                  "reason"
+                ]
+              }
+            },
+            "parameter": "Precise",
+            "presencePenaltyEnabled": true,
+            "presence_penalty": 0.5,
+            "prompts": [
+              {
+                "content": "{sys.query}",
+                "role": "user"
+              }
+            ],
+            "showStructuredOutput": true,
+            "sys_prompt": "你是火电厂企业知识库的用户问题路由器。你的任务不是回答问题，而是判断用户问题应该进入哪条检索路线。\n\n可选分类只有五个：\n\nplain_rag：\n适用于明确事实问答、规程问答、条款问答、单点处理建议。问题对象明确，答案通常集中在一个文档或局部段落。\n例：凝汽器真空下降时，运行人员应重点检查哪些项目？\n\ngraph_rag：\n适用于跨文档对比、多实体关系、多个说法是否指向同一类问题、原因与措施关系梳理。\n例：真空异常、低真空报警、凝汽器真空下降是否指向同一类问题？\n\nraptor：\n适用于长文档总结、制度原则归纳、整体框架提炼、多文档总体思路总结。\n例：总结高风险作业制度中关于许可、监护、隔离、应急的总体要求。\n\ngraph_raptor：\n适用于复杂综合分析，需要同时分析实体关系、跨文档内容和总体框架。\n例：从运行处置、设备缺陷治理、安全许可三方面分析凝汽器真空下降的闭环处理。\n\nclarify：\n适用于问题过于模糊，缺少对象、范围或上下文，不能直接检索。\n例：这个问题怎么处理？\n\n判断优先级：\n1. 如果问题同时要求“关系/对比”和“总体框架/闭环分析”，优先 graph_raptor。\n2. 如果只是跨文档对比、多实体关系，优先 graph_rag。\n3. 如果只是总结制度、总结文档、归纳原则，优先 raptor。\n4. 如果是明确单点问答，优先 plain_rag。\n5. 如果缺少关键对象或范围，分类为 clarify。\n\n只输出 JSON，不要输出其他内容。\n{\n  \"category\": \"plain_rag | graph_rag | raptor | graph_raptor | clarify\",\n  \"reason\": \"一句话说明分类原因\"\n}",
+            "temperature": 0.2,
+            "temperatureEnabled": true,
+            "tools": [],
+            "topPEnabled": true,
+            "top_p": 0.75,
+            "user_prompt": "",
+            "visual_files_var": ""
+          },
+          "label": "Agent",
+          "name": "route_classify"
+        },
+        "dragging": false,
+        "id": "Agent:RouteClassify",
+        "measured": {
+          "height": 89,
+          "width": 200
+        },
+        "position": {
+          "x": -470,
+          "y": 60
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "agentNode"
+      },
+      {
+        "data": {
+          "form": {
+            "conditions": [
+              {
+                "items": [
+                  {
+                    "cpn_id": "Agent:RouteClassify@structured.category",
+                    "operator": "contains",
+                    "value": "plain_rag"
+                  }
+                ],
+                "logical_operator": "and",
+                "to": [
+                  "Retrieval:PlainRetrieval"
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "cpn_id": "Agent:RouteClassify@structured.category",
+                    "operator": "contains",
+                    "value": "graph_rag"
+                  }
+                ],
+                "logical_operator": "and",
+                "to": [
+                  "Retrieval:GraphRetrieval"
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "cpn_id": "Agent:RouteClassify@structured.category",
+                    "operator": "contains",
+                    "value": "raptor"
+                  }
+                ],
+                "logical_operator": "and",
+                "to": [
+                  "Retrieval:RaptorRetrieval"
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "cpn_id": "Agent:RouteClassify@structured.category",
+                    "operator": "contains",
+                    "value": "graph_raptor"
+                  }
+                ],
+                "logical_operator": "and",
+                "to": [
+                  "Retrieval:GraphComplexRetrieval"
+                ]
+              },
+              {
+                "items": [
+                  {
+                    "cpn_id": "Agent:RouteClassify@structured.category",
+                    "operator": "contains",
+                    "value": "clarify"
+                  }
+                ],
+                "logical_operator": "and",
+                "to": [
+                  "Message:ClarifyMessage"
+                ]
+              }
+            ],
+            "end_cpn_ids": [
+              "Message:DebugMessage"
+            ]
+          },
+          "label": "Switch",
+          "name": "route_switch"
+        },
+        "dragging": false,
+        "id": "Switch:RouteSwitch",
+        "measured": {
+          "height": 482,
+          "width": 200
+        },
+        "position": {
+          "x": -200,
+          "y": -55
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "switchNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cross_languages": [],
+            "empty_response": "",
+            "kb_ids": [
+              "e132e433583d11f1a1bf00155d6eef21"
+            ],
+            "keywords_similarity_weight": 0.3,
+            "meta_data_filter": {},
+            "outputs": {
+              "formalized_content": {
+                "type": "string",
+                "value": ""
+              },
+              "json": {
+                "type": "Array<Object>",
+                "value": []
+              }
+            },
+            "query": "{sys.query}",
+            "rerank_id": "BAAI/bge-reranker-v2-m3@SILICONFLOW",
+            "retrieval_from": "dataset",
+            "similarity_threshold": 0.25,
+            "toc_enhance": false,
+            "top_k": 1024,
+            "top_n": 8,
+            "use_kg": false
+          },
+          "label": "Retrieval",
+          "name": "retr_plain"
+        },
+        "dragging": false,
+        "id": "Retrieval:PlainRetrieval",
+        "measured": {
+          "height": 125,
+          "width": 200
+        },
+        "position": {
+          "x": 80,
+          "y": -310
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "retrievalNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cite": true,
+            "delay_after_error": 1,
+            "description": "",
+            "exception_default_value": "",
+            "exception_goto": [],
+            "exception_method": "",
+            "frequencyPenaltyEnabled": true,
+            "frequency_penalty": 0.5,
+            "llm_id": "I2AI/minimax-m2.5___OpenAI-API@OpenAI-API-Compatible",
+            "maxTokensEnabled": false,
+            "max_retries": 3,
+            "max_rounds": 1,
+            "max_tokens": 4096,
+            "mcp": [],
+            "message_history_window_size": 12,
+            "outputs": {
+              "content": {
+                "type": "string",
+                "value": ""
+              }
+            },
+            "parameter": "Precise",
+            "presencePenaltyEnabled": true,
+            "presence_penalty": 0.5,
+            "prompts": [
+              {
+                "content": "用户问题:\n{sys.query}\n\n普通 RAG 检索结果:\n{Retrieval:PlainRetrieval@formalized_content}\n\n请生成答案。",
+                "role": "user"
+              }
+            ],
+            "showStructuredOutput": false,
+            "sys_prompt": "你是火电厂运行知识助手。请只根据检索结果回答用户问题。\n\n要求：\n1. 先给出直接结论。\n2. 再用表格列出依据、检查项、处理措施或制度要求。\n3. 只使用检索内容，不编造知识库外的原因、定值、条款或操作命令。\n4. 涉及安全操作时，提示应以现场规程、工作票和专业人员确认结果为准。\n5. 如果检索结果不足，明确写“当前资料不足以判断”。\n\n输出结构：\n### 结论\n### 依据与处理要点\n### 注意事项",
+            "temperature": 0.2,
+            "temperatureEnabled": true,
+            "tools": [],
+            "topPEnabled": true,
+            "top_p": 0.75,
+            "user_prompt": "",
+            "visual_files_var": ""
+          },
+          "label": "Agent",
+          "name": "ans_plain"
+        },
+        "dragging": false,
+        "id": "Agent:PlainAnswer",
+        "measured": {
+          "height": 89,
+          "width": 200
+        },
+        "position": {
+          "x": 340,
+          "y": -310
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "agentNode"
+      },
+      {
+        "data": {
+          "form": {
+            "content": [
+              "{Agent:PlainChecker@content}"
+            ]
+          },
+          "label": "Message",
+          "name": "msg_plain"
+        },
+        "dragging": false,
+        "id": "Message:PlainMessage",
+        "measured": {
+          "height": 85,
+          "width": 200
+        },
+        "position": {
+          "x": 860,
+          "y": -310
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "messageNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cross_languages": [],
+            "empty_response": "",
+            "kb_ids": [
+              "55ad227c583e11f1b33700155d6eef21"
+            ],
+            "keywords_similarity_weight": 0.5,
+            "meta_data_filter": {},
+            "outputs": {
+              "formalized_content": {
+                "type": "string",
+                "value": ""
+              },
+              "json": {
+                "type": "Array<Object>",
+                "value": []
+              }
+            },
+            "query": "{sys.query}",
+            "rerank_id": "BAAI/bge-reranker-v2-m3@SILICONFLOW",
+            "retrieval_from": "dataset",
+            "similarity_threshold": 0.18,
+            "toc_enhance": false,
+            "top_k": 1024,
+            "top_n": 12,
+            "use_kg": true
+          },
+          "label": "Retrieval",
+          "name": "retr_graph"
+        },
+        "dragging": false,
+        "id": "Retrieval:GraphRetrieval",
+        "measured": {
+          "height": 125,
+          "width": 200
+        },
+        "position": {
+          "x": 80,
+          "y": -90
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "retrievalNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cite": true,
+            "delay_after_error": 1,
+            "description": "",
+            "exception_default_value": "",
+            "exception_goto": [],
+            "exception_method": "",
+            "frequencyPenaltyEnabled": true,
+            "frequency_penalty": 0.5,
+            "llm_id": "I2AI/minimax-m2.5___OpenAI-API@OpenAI-API-Compatible",
+            "maxTokensEnabled": false,
+            "max_retries": 3,
+            "max_rounds": 1,
+            "max_tokens": 4096,
+            "mcp": [],
+            "message_history_window_size": 12,
+            "outputs": {
+              "content": {
+                "type": "string",
+                "value": ""
+              }
+            },
+            "parameter": "Precise",
+            "presencePenaltyEnabled": true,
+            "presence_penalty": 0.5,
+            "prompts": [
+              {
+                "content": "用户问题:\n{sys.query}\n\nGraphRAG 检索结果:\n{Retrieval:GraphRetrieval@formalized_content}\n\n请生成关系分析答案。",
+                "role": "user"
+              }
+            ],
+            "showStructuredOutput": false,
+            "sys_prompt": "你是火电厂知识图谱分析助手。请根据检索结果回答用户问题。\n\n要求：\n1. 识别问题中的关键实体、异常现象、原因、措施、风险和文档来源。\n2. 如果问题涉及多个说法，判断它们是否指向同一类问题。\n3. 如果问题涉及两个或多个文档，对比不同文档的关注重点。\n4. 使用表格输出，减少长段落。\n5. 不要编造知识库中没有出现的关系。\n\n输出结构：\n### 关系判断\n### 关键实体与关系\n### 跨文档差异\n### 总结",
+            "temperature": 0.2,
+            "temperatureEnabled": true,
+            "tools": [],
+            "topPEnabled": true,
+            "top_p": 0.75,
+            "user_prompt": "",
+            "visual_files_var": ""
+          },
+          "label": "Agent",
+          "name": "sum_graph"
+        },
+        "dragging": false,
+        "id": "Agent:GraphSummary",
+        "measured": {
+          "height": 89,
+          "width": 200
+        },
+        "position": {
+          "x": 340,
+          "y": -90
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "agentNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cite": true,
+            "delay_after_error": 1,
+            "description": "",
+            "exception_default_value": "",
+            "exception_goto": [],
+            "exception_method": "",
+            "frequencyPenaltyEnabled": true,
+            "frequency_penalty": 0.5,
+            "llm_id": "I2AI/minimax-m2.5___OpenAI-API@OpenAI-API-Compatible",
+            "maxTokensEnabled": false,
+            "max_retries": 3,
+            "max_rounds": 1,
+            "max_tokens": 4096,
+            "mcp": [],
+            "message_history_window_size": 12,
+            "outputs": {
+              "content": {
+                "type": "string",
+                "value": ""
+              }
+            },
+            "parameter": "Precise",
+            "presencePenaltyEnabled": true,
+            "presence_penalty": 0.5,
+            "prompts": [
+              {
+                "content": "用户问题:\n{sys.query}\n\n可用证据:\n{Retrieval:GraphRetrieval@formalized_content}\n\n待审查答案:\n{Agent:GraphSummary@content}",
+                "role": "user"
+              }
+            ],
+            "showStructuredOutput": false,
+            "sys_prompt": "你是答案审查器。你的任务是检查答案是否严格基于证据。\n\n检查规则：\n1. 答案必须回答用户问题。\n2. 删除没有证据支持的内容。\n3. 不把“可能原因”写成“确定原因”。\n4. 不编造保护定值、设备编号、规程条款或现场操作命令。\n5. 证据不足时，保留“当前资料不足以判断”的说明。\n6. 不解释审查过程，直接输出修正后的最终答案。",
+            "temperature": 0.2,
+            "temperatureEnabled": true,
+            "tools": [],
+            "topPEnabled": true,
+            "top_p": 0.75,
+            "user_prompt": "",
+            "visual_files_var": ""
+          },
+          "label": "Agent",
+          "name": "check_graph"
+        },
+        "dragging": false,
+        "id": "Agent:GraphChecker",
+        "measured": {
+          "height": 89,
+          "width": 200
+        },
+        "position": {
+          "x": 600,
+          "y": -90
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "agentNode"
+      },
+      {
+        "data": {
+          "form": {
+            "content": [
+              "{Agent:GraphChecker@content}"
+            ]
+          },
+          "label": "Message",
+          "name": "msg_graph"
+        },
+        "dragging": false,
+        "id": "Message:GraphMessage",
+        "measured": {
+          "height": 85,
+          "width": 200
+        },
+        "position": {
+          "x": 860,
+          "y": -90
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "messageNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cross_languages": [],
+            "empty_response": "",
+            "kb_ids": [
+              "7ad25e00590f11f1a1d700155d8d19ed"
+            ],
+            "keywords_similarity_weight": 0.4,
+            "meta_data_filter": {},
+            "outputs": {
+              "formalized_content": {
+                "type": "string",
+                "value": ""
+              },
+              "json": {
+                "type": "Array<Object>",
+                "value": []
+              }
+            },
+            "query": "{sys.query}",
+            "rerank_id": "BAAI/bge-reranker-v2-m3@SILICONFLOW",
+            "retrieval_from": "dataset",
+            "similarity_threshold": 0.18,
+            "toc_enhance": false,
+            "top_k": 1024,
+            "top_n": 12,
+            "use_kg": false
+          },
+          "label": "Retrieval",
+          "name": "retr_raptor"
+        },
+        "dragging": false,
+        "id": "Retrieval:RaptorRetrieval",
+        "measured": {
+          "height": 125,
+          "width": 200
+        },
+        "position": {
+          "x": 80,
+          "y": 140
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "retrievalNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cite": true,
+            "delay_after_error": 1,
+            "description": "",
+            "exception_default_value": "",
+            "exception_goto": [],
+            "exception_method": "",
+            "frequencyPenaltyEnabled": true,
+            "frequency_penalty": 0.5,
+            "llm_id": "I2AI/minimax-m2.5___OpenAI-API@OpenAI-API-Compatible",
+            "maxTokensEnabled": false,
+            "max_retries": 3,
+            "max_rounds": 1,
+            "max_tokens": 4096,
+            "mcp": [],
+            "message_history_window_size": 12,
+            "outputs": {
+              "content": {
+                "type": "string",
+                "value": ""
+              }
+            },
+            "parameter": "Precise",
+            "presencePenaltyEnabled": true,
+            "presence_penalty": 0.5,
+            "prompts": [
+              {
+                "content": "用户问题:\n{sys.query}\n\nRAPTOR 检索结果:\n{Retrieval:RaptorRetrieval@formalized_content}\n\n请生成总结答案。",
+                "role": "user"
+              }
+            ],
+            "showStructuredOutput": false,
+            "sys_prompt": "你是火电厂制度与规程总结助手。请根据检索结果进行总结。\n\n要求：\n1. 先给出总体框架。\n2. 再按主题归纳要点。\n3. 对每个主题说明其作用。\n4. 不逐句复述原文。\n5. 不加入知识库之外的制度要求。\n\n输出结构：\n### 总体框架\n### 分项归纳\n### 总结",
+            "temperature": 0.2,
+            "temperatureEnabled": true,
+            "tools": [],
+            "topPEnabled": true,
+            "top_p": 0.75,
+            "user_prompt": "",
+            "visual_files_var": ""
+          },
+          "label": "Agent",
+          "name": "sum_raptor"
+        },
+        "dragging": false,
+        "id": "Agent:RaptorSummary",
+        "measured": {
+          "height": 89,
+          "width": 200
+        },
+        "position": {
+          "x": 340,
+          "y": 140
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "agentNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cite": true,
+            "delay_after_error": 1,
+            "description": "",
+            "exception_default_value": "",
+            "exception_goto": [],
+            "exception_method": "",
+            "frequencyPenaltyEnabled": true,
+            "frequency_penalty": 0.5,
+            "llm_id": "I2AI/minimax-m2.5___OpenAI-API@OpenAI-API-Compatible",
+            "maxTokensEnabled": false,
+            "max_retries": 3,
+            "max_rounds": 1,
+            "max_tokens": 4096,
+            "mcp": [],
+            "message_history_window_size": 12,
+            "outputs": {
+              "content": {
+                "type": "string",
+                "value": ""
+              }
+            },
+            "parameter": "Precise",
+            "presencePenaltyEnabled": true,
+            "presence_penalty": 0.5,
+            "prompts": [
+              {
+                "content": "用户问题:\n{sys.query}\n\n可用证据:\n{Retrieval:RaptorRetrieval@formalized_content}\n\n待审查答案:\n{Agent:RaptorSummary@content}",
+                "role": "user"
+              }
+            ],
+            "showStructuredOutput": false,
+            "sys_prompt": "你是答案审查器。你的任务是检查答案是否严格基于证据。\n\n检查规则：\n1. 答案必须回答用户问题。\n2. 删除没有证据支持的内容。\n3. 不把“可能原因”写成“确定原因”。\n4. 不编造保护定值、设备编号、规程条款或现场操作命令。\n5. 证据不足时，保留“当前资料不足以判断”的说明。\n6. 不解释审查过程，直接输出修正后的最终答案。",
+            "temperature": 0.2,
+            "temperatureEnabled": true,
+            "tools": [],
+            "topPEnabled": true,
+            "top_p": 0.75,
+            "user_prompt": "",
+            "visual_files_var": ""
+          },
+          "label": "Agent",
+          "name": "check_raptor"
+        },
+        "dragging": false,
+        "id": "Agent:RaptorChecker",
+        "measured": {
+          "height": 89,
+          "width": 200
+        },
+        "position": {
+          "x": 600,
+          "y": 140
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "agentNode"
+      },
+      {
+        "data": {
+          "form": {
+            "content": [
+              "{Agent:RaptorChecker@content}"
+            ]
+          },
+          "label": "Message",
+          "name": "msg_raptor"
+        },
+        "dragging": false,
+        "id": "Message:RaptorMessage",
+        "measured": {
+          "height": 85,
+          "width": 200
+        },
+        "position": {
+          "x": 860,
+          "y": 140
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "messageNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cross_languages": [],
+            "empty_response": "",
+            "kb_ids": [
+              "55ad227c583e11f1b33700155d6eef21"
+            ],
+            "keywords_similarity_weight": 0.5,
+            "meta_data_filter": {},
+            "outputs": {
+              "formalized_content": {
+                "type": "string",
+                "value": ""
+              },
+              "json": {
+                "type": "Array<Object>",
+                "value": []
+              }
+            },
+            "query": "{sys.query}",
+            "rerank_id": "BAAI/bge-reranker-v2-m3@SILICONFLOW",
+            "retrieval_from": "dataset",
+            "similarity_threshold": 0.15,
+            "toc_enhance": false,
+            "top_k": 1024,
+            "top_n": 12,
+            "use_kg": true
+          },
+          "label": "Retrieval",
+          "name": "retr_graph_complex"
+        },
+        "dragging": false,
+        "id": "Retrieval:GraphComplexRetrieval",
+        "measured": {
+          "height": 125,
+          "width": 200
+        },
+        "position": {
+          "x": 80,
+          "y": 370
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "retrievalNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cross_languages": [],
+            "empty_response": "",
+            "kb_ids": [
+              "7ad25e00590f11f1a1d700155d8d19ed"
+            ],
+            "keywords_similarity_weight": 0.4,
+            "meta_data_filter": {},
+            "outputs": {
+              "formalized_content": {
+                "type": "string",
+                "value": ""
+              },
+              "json": {
+                "type": "Array<Object>",
+                "value": []
+              }
+            },
+            "query": "{sys.query}",
+            "rerank_id": "BAAI/bge-reranker-v2-m3@SILICONFLOW",
+            "retrieval_from": "dataset",
+            "similarity_threshold": 0.15,
+            "toc_enhance": false,
+            "top_k": 1024,
+            "top_n": 12,
+            "use_kg": false
+          },
+          "label": "Retrieval",
+          "name": "retr_raptor_complex"
+        },
+        "dragging": false,
+        "id": "Retrieval:RaptorComplexRetrieval",
+        "measured": {
+          "height": 125,
+          "width": 200
+        },
+        "position": {
+          "x": 340,
+          "y": 370
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "retrievalNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cite": true,
+            "delay_after_error": 1,
+            "description": "",
+            "exception_default_value": "",
+            "exception_goto": [],
+            "exception_method": "",
+            "frequencyPenaltyEnabled": true,
+            "frequency_penalty": 0.5,
+            "llm_id": "I2AI/minimax-m2.5___OpenAI-API@OpenAI-API-Compatible",
+            "maxTokensEnabled": false,
+            "max_retries": 3,
+            "max_rounds": 1,
+            "max_tokens": 4096,
+            "mcp": [],
+            "message_history_window_size": 12,
+            "outputs": {
+              "content": {
+                "type": "string",
+                "value": ""
+              }
+            },
+            "parameter": "Precise",
+            "presencePenaltyEnabled": true,
+            "presence_penalty": 0.5,
+            "prompts": [
+              {
+                "content": "用户问题:\n{sys.query}\n\nGraphRAG 检索结果:\n{Retrieval:GraphComplexRetrieval@formalized_content}\n\nRAPTOR 检索结果:\n{Retrieval:RaptorComplexRetrieval@formalized_content}\n\n请生成综合分析答案。",
+                "role": "user"
+              }
+            ],
+            "showStructuredOutput": false,
+            "sys_prompt": "你是火电厂运行、检修与安全管理综合分析助手。请根据两个检索结果进行综合分析：\n\n输入一：GraphRAG 检索结果，主要包含实体、原因、措施、风险、跨文档关系。\n输入二：RAPTOR 检索结果，主要包含制度框架、总体原则、长文档摘要。\n\n要求：\n1. 先给出一句话结论。\n2. 按“运行处置、设备缺陷治理、安全许可与风险控制、闭环管理”四个方面输出。\n3. 每个方面说明关注点、依据和输出结果。\n4. 最后给出一张闭环流程表。\n5. 不输出知识库之外的强操作指令。\n\n输出结构：\n### 一句话结论\n### 分项分析\n### 闭环流程\n### 总结",
+            "temperature": 0.2,
+            "temperatureEnabled": true,
+            "tools": [],
+            "topPEnabled": true,
+            "top_p": 0.75,
+            "user_prompt": "",
+            "visual_files_var": ""
+          },
+          "label": "Agent",
+          "name": "sum_complex"
+        },
+        "dragging": false,
+        "id": "Agent:ComplexSummary",
+        "measured": {
+          "height": 89,
+          "width": 200
+        },
+        "position": {
+          "x": 600,
+          "y": 370
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "agentNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cite": true,
+            "delay_after_error": 1,
+            "description": "",
+            "exception_default_value": "",
+            "exception_goto": [],
+            "exception_method": "",
+            "frequencyPenaltyEnabled": true,
+            "frequency_penalty": 0.5,
+            "llm_id": "I2AI/minimax-m2.5___OpenAI-API@OpenAI-API-Compatible",
+            "maxTokensEnabled": false,
+            "max_retries": 3,
+            "max_rounds": 1,
+            "max_tokens": 4096,
+            "mcp": [],
+            "message_history_window_size": 12,
+            "outputs": {
+              "content": {
+                "type": "string",
+                "value": ""
+              }
+            },
+            "parameter": "Precise",
+            "presencePenaltyEnabled": true,
+            "presence_penalty": 0.5,
+            "prompts": [
+              {
+                "content": "用户问题:\n{sys.query}\n\nGraphRAG 证据:\n{Retrieval:GraphComplexRetrieval@formalized_content}\n\nRAPTOR 证据:\n{Retrieval:RaptorComplexRetrieval@formalized_content}\n\n待审查答案:\n{Agent:ComplexSummary@content}",
+                "role": "user"
+              }
+            ],
+            "showStructuredOutput": false,
+            "sys_prompt": "你是答案审查器。你的任务是检查答案是否严格基于证据。\n\n检查规则：\n1. 答案必须回答用户问题。\n2. 删除没有证据支持的内容。\n3. 不把“可能原因”写成“确定原因”。\n4. 不编造保护定值、设备编号、规程条款或现场操作命令。\n5. 证据不足时，保留“当前资料不足以判断”的说明。\n6. 不解释审查过程，直接输出修正后的最终答案。",
+            "temperature": 0.2,
+            "temperatureEnabled": true,
+            "tools": [],
+            "topPEnabled": true,
+            "top_p": 0.75,
+            "user_prompt": "",
+            "visual_files_var": ""
+          },
+          "label": "Agent",
+          "name": "check_complex"
+        },
+        "dragging": false,
+        "id": "Agent:ComplexChecker",
+        "measured": {
+          "height": 89,
+          "width": 200
+        },
+        "position": {
+          "x": 860,
+          "y": 370
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "agentNode"
+      },
+      {
+        "data": {
+          "form": {
+            "content": [
+              "{Agent:ComplexChecker@content}"
+            ]
+          },
+          "label": "Message",
+          "name": "msg_complex"
+        },
+        "dragging": false,
+        "id": "Message:ComplexMessage",
+        "measured": {
+          "height": 85,
+          "width": 200
+        },
+        "position": {
+          "x": 1120,
+          "y": 370
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "messageNode"
+      },
+      {
+        "data": {
+          "form": {
+            "content": [
+              "这个问题还缺少关键信息，暂时不适合直接检索回答。\n\n请补充以下信息中的至少两项：\n1. 具体设备或制度对象；\n2. 异常现象或需要分析的主题；\n3. 需要运行处置、检修分析、制度总结，还是跨文档对比；\n4. 涉及的时间范围、工况或文档范围。"
+            ]
+          },
+          "label": "Message",
+          "name": "msg_clarify"
+        },
+        "dragging": false,
+        "id": "Message:ClarifyMessage",
+        "measured": {
+          "height": 85,
+          "width": 200
+        },
+        "position": {
+          "x": 80,
+          "y": 610
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "messageNode"
+      },
+      {
+        "data": {
+          "form": {
+            "content": [
+              "无法识别问题分类，请检查 route_classify 输出。\n分类结果：{Agent:RouteClassify@structured.category}\n原因：{Agent:RouteClassify@structured.reason}"
+            ]
+          },
+          "label": "Message",
+          "name": "msg_debug"
+        },
+        "dragging": false,
+        "id": "Message:DebugMessage",
+        "measured": {
+          "height": 85,
+          "width": 200
+        },
+        "position": {
+          "x": 80,
+          "y": 760
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "messageNode"
+      },
+      {
+        "data": {
+          "form": {
+            "cite": true,
+            "delay_after_error": 1,
+            "description": "",
+            "exception_default_value": "",
+            "exception_goto": [],
+            "exception_method": "",
+            "frequencyPenaltyEnabled": true,
+            "frequency_penalty": 0.5,
+            "llm_id": "I2AI/minimax-m2.5___OpenAI-API@OpenAI-API-Compatible",
+            "maxTokensEnabled": false,
+            "max_retries": 3,
+            "max_rounds": 1,
+            "max_tokens": 4096,
+            "mcp": [],
+            "message_history_window_size": 12,
+            "outputs": {
+              "content": {
+                "type": "string",
+                "value": ""
+              }
+            },
+            "parameter": "Precise",
+            "presencePenaltyEnabled": true,
+            "presence_penalty": 0.5,
+            "prompts": [
+              {
+                "content": "用户问题:\n{sys.query}\n\n可用证据:\n{Retrieval:PlainRetrieval@formalized_content}\n\n待审查答案:\n{Agent:PlainAnswer@content}\n\n请直接输出审查后的最终答案。",
+                "role": "user"
+              }
+            ],
+            "showStructuredOutput": false,
+            "sys_prompt": "你是答案审查器。你的任务是检查待审查答案是否严格基于可用证据。\n\n检查规则：\n1. 答案必须回答用户问题。\n2. 删除没有证据支持的内容。\n3. 不把“可能原因”写成“确定原因”。\n4. 不编造保护定值、设备编号、规程条款或现场操作命令。\n5. 证据不足时，保留“当前资料不足以判断”的说明。\n6. 不解释审查过程，直接输出修正后的最终答案。",
+            "temperature": 0.2,
+            "temperatureEnabled": true,
+            "tools": [],
+            "topPEnabled": true,
+            "top_p": 0.75,
+            "user_prompt": "",
+            "visual_files_var": ""
+          },
+          "label": "Agent",
+          "name": "check_plain"
+        },
+        "dragging": false,
+        "id": "Agent:PlainChecker",
+        "measured": {
+          "height": 89,
+          "width": 200
+        },
+        "position": {
+          "x": 598.3532303853169,
+          "y": -195.1617699501571
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "agentNode"
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__beginstart-Agent:RouteClassifyend",
+        "source": "begin",
+        "sourceHandle": "start",
+        "target": "Agent:RouteClassify",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Agent:RouteClassifystart-Switch:RouteSwitchend",
+        "source": "Agent:RouteClassify",
+        "sourceHandle": "start",
+        "target": "Switch:RouteSwitch",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Switch:RouteSwitchCase1-Retrieval:PlainRetrievalend",
+        "markerEnd": "logo",
+        "source": "Switch:RouteSwitch",
+        "sourceHandle": "Case 1",
+        "target": "Retrieval:PlainRetrieval",
+        "targetHandle": "end",
+        "type": "buttonEdge",
+        "zIndex": 1001
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Switch:RouteSwitchCase2-Retrieval:GraphRetrievalend",
+        "markerEnd": "logo",
+        "source": "Switch:RouteSwitch",
+        "sourceHandle": "Case 2",
+        "target": "Retrieval:GraphRetrieval",
+        "targetHandle": "end",
+        "type": "buttonEdge",
+        "zIndex": 1001
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Switch:RouteSwitchCase3-Retrieval:RaptorRetrievalend",
+        "markerEnd": "logo",
+        "source": "Switch:RouteSwitch",
+        "sourceHandle": "Case 3",
+        "target": "Retrieval:RaptorRetrieval",
+        "targetHandle": "end",
+        "type": "buttonEdge",
+        "zIndex": 1001
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Switch:RouteSwitchCase4-Retrieval:GraphComplexRetrievalend",
+        "markerEnd": "logo",
+        "source": "Switch:RouteSwitch",
+        "sourceHandle": "Case 4",
+        "target": "Retrieval:GraphComplexRetrieval",
+        "targetHandle": "end",
+        "type": "buttonEdge",
+        "zIndex": 1001
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Switch:RouteSwitchCase5-Message:ClarifyMessageend",
+        "markerEnd": "logo",
+        "source": "Switch:RouteSwitch",
+        "sourceHandle": "Case 5",
+        "target": "Message:ClarifyMessage",
+        "targetHandle": "end",
+        "type": "buttonEdge",
+        "zIndex": 1001
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Switch:RouteSwitchendcpnids-Message:DebugMessageend",
+        "source": "Switch:RouteSwitch",
+        "sourceHandle": "end_cpn_ids",
+        "target": "Message:DebugMessage",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Retrieval:PlainRetrievalstart-Agent:PlainAnswerend",
+        "source": "Retrieval:PlainRetrieval",
+        "sourceHandle": "start",
+        "target": "Agent:PlainAnswer",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Retrieval:GraphRetrievalstart-Agent:GraphSummaryend",
+        "source": "Retrieval:GraphRetrieval",
+        "sourceHandle": "start",
+        "target": "Agent:GraphSummary",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Agent:GraphCheckerstart-Message:GraphMessageend",
+        "source": "Agent:GraphChecker",
+        "sourceHandle": "start",
+        "target": "Message:GraphMessage",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Retrieval:RaptorRetrievalstart-Agent:RaptorSummaryend",
+        "source": "Retrieval:RaptorRetrieval",
+        "sourceHandle": "start",
+        "target": "Agent:RaptorSummary",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Agent:RaptorSummarystart-Agent:RaptorCheckerend",
+        "source": "Agent:RaptorSummary",
+        "sourceHandle": "start",
+        "target": "Agent:RaptorChecker",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Agent:RaptorCheckerstart-Message:RaptorMessageend",
+        "source": "Agent:RaptorChecker",
+        "sourceHandle": "start",
+        "target": "Message:RaptorMessage",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Retrieval:GraphComplexRetrievalstart-Retrieval:RaptorComplexRetrievalend",
+        "source": "Retrieval:GraphComplexRetrieval",
+        "sourceHandle": "start",
+        "target": "Retrieval:RaptorComplexRetrieval",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Retrieval:RaptorComplexRetrievalstart-Agent:ComplexSummaryend",
+        "source": "Retrieval:RaptorComplexRetrieval",
+        "sourceHandle": "start",
+        "target": "Agent:ComplexSummary",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Agent:ComplexSummarystart-Agent:ComplexCheckerend",
+        "source": "Agent:ComplexSummary",
+        "sourceHandle": "start",
+        "target": "Agent:ComplexChecker",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Agent:ComplexCheckerstart-Message:ComplexMessageend",
+        "source": "Agent:ComplexChecker",
+        "sourceHandle": "start",
+        "target": "Message:ComplexMessage",
+        "targetHandle": "end"
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Agent:GraphSummarystart-Agent:GraphCheckerend",
+        "markerEnd": "logo",
+        "source": "Agent:GraphSummary",
+        "sourceHandle": "start",
+        "target": "Agent:GraphChecker",
+        "targetHandle": "end",
+        "type": "buttonEdge",
+        "zIndex": 1001
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Agent:PlainAnswerstart-Agent:PlainCheckerend",
+        "markerEnd": "logo",
+        "source": "Agent:PlainAnswer",
+        "sourceHandle": "start",
+        "target": "Agent:PlainChecker",
+        "targetHandle": "end",
+        "type": "buttonEdge",
+        "zIndex": 1001
+      },
+      {
+        "data": {
+          "isHovered": false
+        },
+        "id": "xy-edge__Agent:PlainCheckerstart-Message:PlainMessageend",
+        "markerEnd": "logo",
+        "source": "Agent:PlainChecker",
+        "sourceHandle": "start",
+        "target": "Message:PlainMessage",
+        "targetHandle": "end",
+        "type": "buttonEdge",
+        "zIndex": 1001
+      }
+    ]
+  },
+  "globals": {
+    "sys.conversation_turns": 0,
+    "sys.files": [],
+    "sys.history": [],
+    "sys.query": "",
+    "sys.user_id": "2dfbb2004c4411f1b3e2a9b8fde4332c"
+  },
+  "variables": []
+}
